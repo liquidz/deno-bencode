@@ -1,3 +1,5 @@
+import { BufWriter } from "../deps.ts";
+
 export type Bencode =
   | string
   | number
@@ -6,12 +8,15 @@ export type Bencode =
   | Bencode[];
 export type BencodeDictionary = { [property: string]: Bencode };
 
+const textEncoder = new TextEncoder();
+
 function encodeString(s: string): string {
-  return `${s.length}:${s}`;
+  return `${textEncoder.encode(s).length}:${s}`;
 }
 
 function encodeNumber(n: number): string {
-  return `i${n}e`;
+  const i = (n > 0) ? Math.floor(n) : Math.ceil(n);
+  return `i${i}e`;
 }
 
 function encodeList(list: Bencode[]): string {
@@ -35,7 +40,8 @@ export function encode(x: Bencode): string {
     return encodeNumber(x);
   } else if (typeof x === "object") {
     if (x === null) {
-      return "";
+      // c.f. https://github.com/nrepl/bencode/blob/v1.1.0/test/bencode/core_test.clj#L154
+      return encodeList([]);
     } else if (x instanceof Array) {
       return encodeList(x);
     } else {
@@ -43,4 +49,10 @@ export function encode(x: Bencode): string {
     }
   }
   return "";
+}
+
+export async function write(output: BufWriter, x: Bencode): Promise<number> {
+  const n = await output.write(textEncoder.encode(encode(x)));
+  await output.flush();
+  return n;
 }

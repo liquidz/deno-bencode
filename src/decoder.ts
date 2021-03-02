@@ -1,10 +1,12 @@
-import { BufReader } from "../deps.ts";
+import { BufReader, StringReader } from "../deps.ts";
 import { Bencode, BencodeDictionary } from "./encoder.ts";
 
 const D = 100;
 const E = 101;
 const I = 105;
 const L = 108;
+
+const textDecoder = new TextDecoder();
 
 function stringDropLast(s: string, n: number) {
   return s.substring(0, s.length - n);
@@ -37,8 +39,7 @@ async function readString(
     throw Error("bencode: FIXME");
   }
 
-  const dec = new TextDecoder();
-  return dec.decode(res);
+  return textDecoder.decode(res);
 }
 
 async function readList(input: BufReader): Promise<Bencode[]> {
@@ -68,7 +69,7 @@ async function readDictionary(input: BufReader): Promise<BencodeDictionary> {
       break;
     }
     const key = await readString(input, kb);
-    const value = await decode(input);
+    const value = await read(input);
 
     res[key] = value;
   }
@@ -90,7 +91,11 @@ async function decodeBody(
   }
 }
 
-export async function decode(input: BufReader): Promise<Bencode> {
+export function decode(s: string): Promise<Bencode> {
+  return read(new BufReader(new StringReader(s)));
+}
+
+export async function read(input: BufReader): Promise<Bencode> {
   const b = await input.readByte();
   if (b === null) {
     return null;
