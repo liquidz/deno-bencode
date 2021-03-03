@@ -19,19 +19,19 @@ Deno.test("isArray", async () => {
   }
 });
 
-Deno.test("isDictionary", async () => {
+Deno.test("isObject", async () => {
   asserts.assert(
-    !sut.isDictionary(await decoder.decode(encoder.encode("foo"))),
+    !sut.isObject(await decoder.decode(encoder.encode("foo"))),
   );
-  asserts.assert(!sut.isDictionary(await decoder.decode(encoder.encode(123))));
+  asserts.assert(!sut.isObject(await decoder.decode(encoder.encode(123))));
   asserts.assert(
-    !sut.isDictionary(await decoder.decode(encoder.encode([123, "foo"]))),
+    !sut.isObject(await decoder.decode(encoder.encode([123, "foo"]))),
   );
 
   const result = await decoder.decode(encoder.encode({ foo: 123, bar: "baz" }));
-  asserts.assert(sut.isDictionary(result));
+  asserts.assert(sut.isObject(result));
 
-  if (sut.isDictionary(result)) {
+  if (sut.isObject(result)) {
     asserts.assertEquals(result["foo"], 123);
     asserts.assertEquals(result["bar"], "baz");
   }

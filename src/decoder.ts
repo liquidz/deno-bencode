@@ -1,5 +1,5 @@
 import { BufReader, StringReader } from "../deps.ts";
-import { Bencode, BencodeDictionary } from "./encoder.ts";
+import { Bencode, BencodeObject } from "./encoder.ts";
 
 const D = 100;
 const E = 101;
@@ -43,7 +43,7 @@ async function readString(
 }
 
 async function readList(input: BufReader): Promise<Bencode[]> {
-  let res: Bencode[] = [];
+  const res: Bencode[] = [];
 
   while (true) {
     const b = await input.readByte();
@@ -59,8 +59,8 @@ async function readList(input: BufReader): Promise<Bencode[]> {
   return res;
 }
 
-async function readDictionary(input: BufReader): Promise<BencodeDictionary> {
-  let res: BencodeDictionary = {};
+async function readDictionary(input: BufReader): Promise<BencodeObject> {
+  const res: BencodeObject = {};
   while (true) {
     const kb = await input.readByte();
     if (kb === null) {

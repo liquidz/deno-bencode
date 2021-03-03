@@ -4,9 +4,9 @@ export type Bencode =
   | string
   | number
   | null
-  | BencodeDictionary
+  | BencodeObject
   | Bencode[];
-export type BencodeDictionary = { [property: string]: Bencode };
+export type BencodeObject = { [property: string]: Bencode };
 
 const textEncoder = new TextEncoder();
 
@@ -26,7 +26,7 @@ function encodeList(list: Bencode[]): string {
   return `l${encoded.join("")}e`;
 }
 
-function encodeDict(dict: BencodeDictionary): string {
+function encodeDict(dict: BencodeObject): string {
   const encoded = Object.entries(dict).map(([k, v]) => {
     return encode(k) + encode(v);
   });
