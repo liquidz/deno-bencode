@@ -14,14 +14,14 @@ Deno.test("decode number", async () => {
   asserts.assertEquals(await sut.decode("i-12.3e"), -12);
 });
 
-Deno.test("decode list", async () => {
+Deno.test("decode array", async () => {
   asserts.assertEquals(await sut.decode("le"), []);
   asserts.assertEquals(await sut.decode("llee"), [[]]);
   asserts.assertEquals(await sut.decode("l3:fooe"), ["foo"]);
   asserts.assertEquals(await sut.decode("l3:fooi123ee"), ["foo", 123]);
 });
 
-Deno.test("decode dictionary", async () => {
+Deno.test("decode object", async () => {
   asserts.assertEquals(await sut.decode("de"), {});
   asserts.assertEquals(await sut.decode("d3:fooi123ee"), { foo: 123 });
   asserts.assertEquals(await sut.decode("d3:fooli123ed3:bar3:bazeee"), {

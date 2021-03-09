@@ -19,14 +19,14 @@ function encodeNumber(n: number): string {
   return `i${i}e`;
 }
 
-function encodeList(list: Bencode[]): string {
-  const encoded = list.map((x: Bencode) => {
+function encodeArray(arr: Bencode[]): string {
+  const encoded = arr.map((x: Bencode) => {
     return encode(x);
   });
   return `l${encoded.join("")}e`;
 }
 
-function encodeDict(dict: BencodeObject): string {
+function encodeObject(dict: BencodeObject): string {
   const encoded = Object.entries(dict).map(([k, v]) => {
     return encode(k) + encode(v);
   });
@@ -41,11 +41,11 @@ export function encode(x: Bencode): string {
   } else if (typeof x === "object") {
     if (x === null) {
       // c.f. https://github.com/nrepl/bencode/blob/v1.1.0/test/bencode/core_test.clj#L154
-      return encodeList([]);
+      return encodeArray([]);
     } else if (x instanceof Array) {
-      return encodeList(x);
+      return encodeArray(x);
     } else {
-      return encodeDict(x);
+      return encodeObject(x);
     }
   }
   return "";
