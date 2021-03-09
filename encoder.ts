@@ -1,4 +1,4 @@
-import { BufWriter } from "../deps.ts";
+import { BufWriter } from "./deps.ts";
 
 export type Bencode =
   | string

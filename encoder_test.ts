@@ -1,4 +1,4 @@
-import { asserts, BufWriter, StringWriter } from "../deps.ts";
+import { asserts, BufWriter, StringWriter } from "./deps.ts";
 import * as sut from "./encoder.ts";
 
 Deno.test("encode string", () => {

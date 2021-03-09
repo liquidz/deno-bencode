@@ -1,4 +1,4 @@
-import { asserts } from "../deps.ts";
+import { asserts } from "./deps.ts";
 import * as decoder from "./decoder.ts";
 import * as encoder from "./encoder.ts";
 import * as sut from "./util.ts";

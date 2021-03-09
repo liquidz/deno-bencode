@@ -1,4 +1,4 @@
-import { asserts, BufReader, StringReader } from "../deps.ts";
+import { asserts, BufReader, StringReader } from "./deps.ts";
 import * as sut from "./decoder.ts";
 
 Deno.test("decode string", async () => {

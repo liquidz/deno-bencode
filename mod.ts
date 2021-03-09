@@ -1,3 +1,3 @@
-export * from "./src/encoder.ts";
-export * from "./src/decoder.ts";
-export * from "./src/util.ts";
+export * from "./encoder.ts";
+export * from "./decoder.ts";
+export * from "./util.ts";

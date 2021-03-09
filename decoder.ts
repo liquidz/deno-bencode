@@ -1,4 +1,4 @@
-import { BufReader, StringReader } from "../deps.ts";
+import { BufReader, StringReader } from "./deps.ts";
 import { Bencode, BencodeObject } from "./encoder.ts";
 
 const E = "e";
