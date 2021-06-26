@@ -1,0 +1,41 @@
+= deno-bencode
+
+image:https://github.com/liquidz/deno-bencode/actions/workflows/test.yml/badge.svg["GitHub Actions for test workflow", link="https://github.com/liquidz/deno-bencode/actions/workflows/test.yml"]
+
+https://en.wikipedia.org/wiki/Bencode[Bencode] decoder/encode for https://deno.land[Deno]
+
+== Decode
+
+[source,typescript]
+----
+// Decode String
+await bencode.decode("d3:fooli123ed3:bar3:bazeee") // => {foo: [123, {bar: "baz"}]}
+
+// Decode with BufReader
+const reader = new BufReader(new StringReader("3:fooi123e"));
+await bencode.read(reader) // => "foo"
+await bencode.read(reader) // => 123
+----
+
+== Encode
+
+[source,typescript]
+----
+// Encode String
+bencode.encode({foo: [123, {bar: "baz"}]}) // => "d3:fooli123ed3:bar3:bazeee"
+
+// Encode with BufWriter
+const strWriter = new StringWriter();
+const writer = new BufWriter(strWriter);
+
+await bencode.write(writer, "foo");
+strWriter.toString() // => "3:foo"
+await bencode.write(writer, 123);
+strWriter.toString() // => "3:fooi123e"
+----
+
+== License
+
+Copyright (c) 2021 http://twitter.com/uochan[Masashi Iizuka]
+
+Distributed under the MIT License.
