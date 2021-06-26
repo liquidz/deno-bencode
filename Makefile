@@ -4,7 +4,7 @@ test:
 
 .PHONY: lint
 lint:
-	deno fmt --check
+	deno fmt --check *.ts
 	deno lint --unstable
 
 .PHONY: update
