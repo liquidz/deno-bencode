@@ -1,5 +1,6 @@
 = deno-bencode
 
+image:https://img.shields.io/badge/deno.land-deno__bencode-blue?logo=deno["deno.land", link="https://deno.land/x/deno_bencode"]
 image:https://github.com/liquidz/deno-bencode/actions/workflows/test.yml/badge.svg["GitHub Actions for test workflow", link="https://github.com/liquidz/deno-bencode/actions/workflows/test.yml"]
 
 https://en.wikipedia.org/wiki/Bencode[Bencode] decoder/encode for https://deno.land[Deno]
