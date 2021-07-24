@@ -1,12 +1,5 @@
 import { BufWriter } from "./deps.ts";
-
-export type Bencode =
-  | string
-  | number
-  | null
-  | BencodeObject
-  | Bencode[];
-export type BencodeObject = { [property: string]: Bencode };
+import { Bencode, BencodeObject } from "./types.ts";
 
 const textEncoder = new TextEncoder();
 

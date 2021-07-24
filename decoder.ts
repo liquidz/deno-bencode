@@ -1,5 +1,5 @@
 import { BufReader, StringReader } from "./deps.ts";
-import { Bencode, BencodeObject } from "./encoder.ts";
+import { Bencode, BencodeObject } from "./types.ts";
 
 const E = "e";
 const COLON = ":";

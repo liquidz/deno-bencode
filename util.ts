@@ -1,4 +1,4 @@
-import { Bencode, BencodeObject } from "./encoder.ts";
+import { Bencode, BencodeObject } from "./types.ts";
 
 export function isArray(x: Bencode): x is Bencode[] {
   return (typeof x === "object") && (x instanceof Array);
