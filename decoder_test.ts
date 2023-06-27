@@ -1,4 +1,4 @@
-import { asserts, BufReader, StringReader } from "./deps.ts";
+import { asserts, io } from "./deps.ts";
 import * as sut from "./decoder.ts";
 
 Deno.test("decode string", async () => {
@@ -30,7 +30,7 @@ Deno.test("decode object", async () => {
 });
 
 Deno.test("read", async () => {
-  const reader = new BufReader(new StringReader("3:fooi123e"));
+  const reader = new io.BufReader(new io.StringReader("3:fooi123e"));
   asserts.assertEquals(await sut.read(reader), "foo");
   asserts.assertEquals(await sut.read(reader), 123);
 });

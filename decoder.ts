@@ -1,13 +1,6 @@
-import { BufReader, StringReader } from "./deps.ts";
+import { io } from "./deps.ts";
 import { Bencode, BencodeObject } from "./types.ts";
-
-const E = "e";
-const COLON = ":";
-
-const D_CODE = 100;
-const E_CODE = E.charCodeAt(0);
-const I_CODE = 105;
-const L_CODE = 108;
+import { COLON, D_CODE, E, E_CODE, I_CODE, L_CODE } from "./constant.ts";
 
 const textDecoder = new TextDecoder();
 
@@ -15,7 +8,7 @@ function stringDropLast(s: string, n: number) {
   return s.substring(0, s.length - n);
 }
 
-async function readNumber(input: BufReader): Promise<number> {
+async function readNumber(input: io.BufReader): Promise<number> {
   const s = await input.readString(E);
   if (s === null) {
     throw Error("bencode: Failed to read number");
@@ -25,7 +18,7 @@ async function readNumber(input: BufReader): Promise<number> {
 }
 
 async function readString(
-  input: BufReader,
+  input: io.BufReader,
   firstByte: number,
 ): Promise<string> {
   const s = await input.readString(COLON);
@@ -45,7 +38,7 @@ async function readString(
   return textDecoder.decode(res);
 }
 
-async function readArray(input: BufReader): Promise<Bencode[]> {
+async function readArray(input: io.BufReader): Promise<Bencode[]> {
   const res: Bencode[] = [];
 
   while (true) {
@@ -62,7 +55,7 @@ async function readArray(input: BufReader): Promise<Bencode[]> {
   return res;
 }
 
-async function readObject(input: BufReader): Promise<BencodeObject> {
+async function readObject(input: io.BufReader): Promise<BencodeObject> {
   const res: BencodeObject = {};
   while (true) {
     const kb = await input.readByte();
@@ -85,7 +78,7 @@ async function readObject(input: BufReader): Promise<BencodeObject> {
 }
 
 async function readBody(
-  input: BufReader,
+  input: io.BufReader,
   readByte: number,
 ): Promise<Bencode> {
   if (readByte === I_CODE) {
@@ -99,14 +92,14 @@ async function readBody(
   }
 }
 
-export function decode(s: string): Promise<Bencode> {
-  return read(new BufReader(new StringReader(s)));
-}
-
-export async function read(input: BufReader): Promise<Bencode> {
+export async function read(input: io.BufReader): Promise<Bencode> {
   const b = await input.readByte();
   if (b === null) {
     return null;
   }
   return await readBody(input, b);
+}
+
+export function decode(s: string): Promise<Bencode> {
+  return read(new io.BufReader(new io.StringReader(s)));
 }
