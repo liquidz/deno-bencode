@@ -35,8 +35,19 @@ await bencode.write(writer, 123);
 strWriter.toString() // => "3:fooi123e"
 ----
 
+== Stream
+
+[source,typescript]
+----
+const src = await Deno.open("./test_input.txt");
+const stream = src.readable.pipeThrough(new bencode.Uint8ArrayToBencodeStream())
+for await (const v of stream) {
+  console.log(v);
+}
+----
+
 == License
 
-Copyright (c) 2021-2022 http://twitter.com/uochan[Masashi Iizuka]
+Copyright (c) 2021-2023 http://twitter.com/uochan[Masashi Iizuka]
 
 Distributed under the MIT License.
