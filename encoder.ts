@@ -32,7 +32,7 @@ export function encode(x: Bencode): string {
   } else if (typeof x === "number") {
     return encodeNumber(x);
   } else if (typeof x === "object") {
-    if (x === null) {
+    if (x == null) {
       // c.f. https://github.com/nrepl/bencode/blob/v1.1.0/test/bencode/core_test.clj#L154
       return encodeArray([]);
     } else if (x instanceof Array) {

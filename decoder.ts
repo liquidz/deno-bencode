@@ -10,7 +10,7 @@ function stringDropLast(s: string, n: number) {
 
 async function readNumber(input: io.BufReader): Promise<number> {
   const s = await input.readString(E);
-  if (s === null) {
+  if (s == null) {
     throw Error("bencode: Failed to read number");
   }
 
@@ -22,7 +22,7 @@ async function readString(
   firstByte: number,
 ): Promise<string> {
   const s = await input.readString(COLON);
-  if (s === null) {
+  if (s == null) {
     throw Error("bencode: Failed to read string length");
   }
 
@@ -31,7 +31,7 @@ async function readString(
   );
   const buf = new Uint8Array(strLen);
   const res = await input.readFull(buf);
-  if (res === null) {
+  if (res == null) {
     throw Error("bencode: Failed to read string");
   }
 
@@ -44,7 +44,7 @@ async function readArray(input: io.BufReader): Promise<Bencode[]> {
   while (true) {
     const b = await input.readByte();
 
-    if (b === null) {
+    if (b == null) {
       throw Error("bencode: Failed to read array");
     } else if (b === E_CODE) {
       break;
@@ -59,7 +59,7 @@ async function readObject(input: io.BufReader): Promise<BencodeObject> {
   const res: BencodeObject = {};
   while (true) {
     const kb = await input.readByte();
-    if (kb === null) {
+    if (kb == null) {
       throw Error("bencode: Failed to read object key");
     } else if (kb === E_CODE) {
       break;
@@ -67,7 +67,7 @@ async function readObject(input: io.BufReader): Promise<BencodeObject> {
     const key = await readString(input, kb);
 
     const vb = await input.readByte();
-    if (vb === null) {
+    if (vb == null) {
       throw Error("bencode: Failed to read object value");
     }
     const value = await readBody(input, vb);
@@ -94,7 +94,7 @@ async function readBody(
 
 export async function read(input: io.BufReader): Promise<Bencode> {
   const b = await input.readByte();
-  if (b === null) {
+  if (b == null) {
     return null;
   }
   return await readBody(input, b);
