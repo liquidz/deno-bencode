@@ -1,4 +1,4 @@
-import { asserts, BufWriter, StringWriter } from "./deps.ts";
+import { asserts, io } from "./deps.ts";
 import * as sut from "./encoder.ts";
 
 Deno.test("encode string", () => {
@@ -32,11 +32,15 @@ Deno.test("encode dictionary", () => {
 });
 
 Deno.test("write", async () => {
-  const strWriter = new StringWriter();
-  const writer = new BufWriter(strWriter);
+  const strWriter = new io.StringWriter();
+  const writer = new io.BufWriter(strWriter);
 
-  await sut.write(writer, "foo");
+  let size = 0;
+  size = await sut.write(writer, "foo");
+  asserts.assertEquals(size, 5);
   asserts.assertEquals(strWriter.toString(), "3:foo");
-  await sut.write(writer, 123);
+
+  size = await sut.write(writer, 123);
+  asserts.assertEquals(size, 5);
   asserts.assertEquals(strWriter.toString(), "3:fooi123e");
 });

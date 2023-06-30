@@ -1,4 +1,4 @@
-import { BufWriter } from "./deps.ts";
+import { io } from "./deps.ts";
 import { Bencode, BencodeObject } from "./types.ts";
 
 const textEncoder = new TextEncoder();
@@ -8,7 +8,7 @@ function encodeString(s: string): string {
 }
 
 function encodeNumber(n: number): string {
-  const i = (n > 0) ? Math.floor(n) : Math.ceil(n);
+  const i = n > 0 ? Math.floor(n) : Math.ceil(n);
   return `i${i}e`;
 }
 
@@ -32,7 +32,7 @@ export function encode(x: Bencode): string {
   } else if (typeof x === "number") {
     return encodeNumber(x);
   } else if (typeof x === "object") {
-    if (x === null) {
+    if (x == null) {
       // c.f. https://github.com/nrepl/bencode/blob/v1.1.0/test/bencode/core_test.clj#L154
       return encodeArray([]);
     } else if (x instanceof Array) {
@@ -44,7 +44,7 @@ export function encode(x: Bencode): string {
   return "";
 }
 
-export async function write(output: BufWriter, x: Bencode): Promise<number> {
+export async function write(output: io.BufWriter, x: Bencode): Promise<number> {
   const n = await output.write(textEncoder.encode(encode(x)));
   await output.flush();
   return n;
