@@ -1,4 +1,3 @@
-import { io } from "./deps.ts";
 import { Bencode, BencodeObject } from "./types.ts";
 
 const textEncoder = new TextEncoder();
@@ -44,8 +43,12 @@ export function encode(x: Bencode): string {
   return "";
 }
 
-export async function write(output: io.BufWriter, x: Bencode): Promise<number> {
-  const n = await output.write(textEncoder.encode(encode(x)));
-  await output.flush();
-  return n;
+export class BencodeToStringStream extends TransformStream<Bencode, string> {
+  constructor() {
+    super({
+      transform: (chunk, controller) => {
+        controller.enqueue(encode(chunk));
+      },
+    });
+  }
 }

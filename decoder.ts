@@ -1,105 +1,164 @@
-import { io } from "./deps.ts";
 import { Bencode, BencodeObject } from "./types.ts";
-import { COLON, D_CODE, E, E_CODE, I_CODE, L_CODE } from "./constant.ts";
+import { stringToReadableStream } from "./stream.ts";
+import { COLON_CODE, D_CODE, E_CODE, I_CODE, L_CODE } from "./constant.ts";
 
 const textDecoder = new TextDecoder();
 
-function stringDropLast(s: string, n: number) {
-  return s.substring(0, s.length - n);
-}
-
-async function readNumber(input: io.BufReader): Promise<number> {
-  const s = await input.readString(E);
-  if (s == null) {
+function readNumber(buf: Uint8Array): {
+  result: number | undefined;
+  rest: Uint8Array;
+} {
+  const index = buf.findIndex((v) => v === E_CODE);
+  if (index === -1) {
+    return { result: undefined, rest: buf };
+  }
+  try {
+    const result = parseInt(textDecoder.decode(buf.slice(1, index)));
+    return { result, rest: buf.slice(index + 1) };
+  } catch (_) {
     throw Error("bencode: Failed to read number");
   }
-
-  return parseInt(stringDropLast(s, 1));
 }
 
-async function readString(
-  input: io.BufReader,
-  firstByte: number,
-): Promise<string> {
-  const s = await input.readString(COLON);
-  if (s == null) {
-    throw Error("bencode: Failed to read string length");
+function readArray(buf: Uint8Array): {
+  result: Bencode[] | undefined;
+  rest: Uint8Array;
+} {
+  const result: Bencode[] = [];
+  let tmp = buf.slice(1);
+  if (tmp.length === 0) {
+    return { result: undefined, rest: buf };
   }
 
-  const strLen = parseInt(
-    String.fromCharCode(firstByte) + stringDropLast(s, 1),
-  );
-  const buf = new Uint8Array(strLen);
-  const res = await input.readFull(buf);
-  if (res == null) {
+  while (tmp[0] !== E_CODE) {
+    const item = read(tmp);
+    if (item.result == null) {
+      return { result: undefined, rest: buf };
+    }
+    result.push(item.result);
+    tmp = item.rest;
+  }
+  return { result, rest: tmp.slice(1) };
+}
+
+function readObject(buf: Uint8Array): {
+  result: BencodeObject | undefined;
+  rest: Uint8Array;
+} {
+  const result: BencodeObject = {};
+  let tmp = buf.slice(1);
+  if (tmp.length === 0) {
+    return { result: undefined, rest: buf };
+  }
+
+  while (tmp[0] !== E_CODE) {
+    const keyItem = read(tmp);
+    if (keyItem.result == null) {
+      return { result: undefined, rest: buf };
+    }
+    if (typeof keyItem.result !== "string") {
+      throw Error("bencode: Failed to read object");
+    }
+
+    const valItem = read(keyItem.rest);
+    if (valItem.result == null) {
+      return { result: undefined, rest: buf };
+    }
+
+    result[keyItem.result] = valItem.result;
+
+    tmp = valItem.rest;
+  }
+
+  return { result, rest: tmp.slice(1) };
+}
+
+function read(buf: Uint8Array): {
+  result: Bencode | undefined;
+  rest: Uint8Array;
+} {
+  const firstByte = buf[0];
+  if (firstByte === I_CODE) {
+    return readNumber(buf);
+  } else if (firstByte === L_CODE) {
+    return readArray(buf);
+  } else if (firstByte === D_CODE) {
+    return readObject(buf);
+  } else {
+    return readString(buf);
+  }
+}
+
+function readString(buf: Uint8Array): {
+  result: string | undefined;
+  rest: Uint8Array;
+} {
+  const colonIndex = buf.findIndex((v) => v === COLON_CODE);
+  if (colonIndex === -1) {
+    return { result: undefined, rest: buf };
+  }
+
+  try {
+    const len = parseInt(textDecoder.decode(buf.slice(0, colonIndex)));
+
+    if (buf.length < colonIndex + len + 1) {
+      return { result: undefined, rest: buf };
+    }
+
+    const result = textDecoder.decode(
+      buf.slice(colonIndex + 1, colonIndex + len + 1),
+    );
+    return { result, rest: buf.slice(colonIndex + len + 1) };
+  } catch (_) {
     throw Error("bencode: Failed to read string");
   }
-
-  return textDecoder.decode(res);
 }
 
-async function readArray(input: io.BufReader): Promise<Bencode[]> {
-  const res: Bencode[] = [];
+export class Uint8ArrayToBencodeStream extends TransformStream<
+  Uint8Array,
+  Bencode
+> {
+  #buf = new Uint8Array();
 
-  while (true) {
-    const b = await input.readByte();
+  constructor() {
+    super({
+      transform: (chunk, controller) => {
+        this.#handle(chunk, controller);
+      },
+      flush: (controller) => {
+        while (this.#buf.length > 0) {
+          const { result, rest } = read(this.#buf);
+          if (result == null) {
+            break;
+          }
+          controller.enqueue(result);
+          this.#buf = rest;
+        }
+      },
+    });
+  }
 
-    if (b == null) {
-      throw Error("bencode: Failed to read array");
-    } else if (b === E_CODE) {
-      break;
-    } else {
-      res.push(await readBody(input, b));
+  #handle(
+    chunk: Uint8Array,
+    controller: TransformStreamDefaultController<Bencode>,
+  ) {
+    this.#buf = Uint8Array.of(...this.#buf, ...chunk);
+    while (this.#buf.length > 0) {
+      const { result, rest } = read(this.#buf);
+      if (result == null) {
+        break;
+      }
+      controller.enqueue(result);
+      this.#buf = rest;
     }
   }
-  return res;
 }
 
-async function readObject(input: io.BufReader): Promise<BencodeObject> {
-  const res: BencodeObject = {};
-  while (true) {
-    const kb = await input.readByte();
-    if (kb == null) {
-      throw Error("bencode: Failed to read object key");
-    } else if (kb === E_CODE) {
-      break;
-    }
-    const key = await readString(input, kb);
+export async function decode(s: string): Promise<Bencode> {
+  const reader = stringToReadableStream(s).pipeThrough(
+    new Uint8ArrayToBencodeStream(),
+  ).getReader();
 
-    const vb = await input.readByte();
-    if (vb == null) {
-      throw Error("bencode: Failed to read object value");
-    }
-    const value = await readBody(input, vb);
-
-    res[key] = value;
-  }
-  return res;
-}
-
-async function readBody(
-  input: io.BufReader,
-  readByte: number,
-): Promise<Bencode> {
-  if (readByte === I_CODE) {
-    return await readNumber(input);
-  } else if (readByte === L_CODE) {
-    return await readArray(input);
-  } else if (readByte === D_CODE) {
-    return await readObject(input);
-  } else {
-    return await readString(input, readByte);
-  }
-}
-
-export async function read(input: io.BufReader): Promise<Bencode> {
-  const b = await input.readByte();
-  if (b == null) {
-    return null;
-  }
-  return await readBody(input, b);
-}
-
-export function decode(s: string): Promise<Bencode> {
-  return read(new io.BufReader(new io.StringReader(s)));
+  const { value } = await reader.read();
+  return value ?? null;
 }
