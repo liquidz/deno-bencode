@@ -12,10 +12,12 @@ https://en.wikipedia.org/wiki/Bencode[Bencode] decoder/encode for https://deno.l
 // Decode String
 await bencode.decode("d3:fooli123ed3:bar3:bazeee") // => {foo: [123, {bar: "baz"}]}
 
-// Decode with BufReader
-const reader = new BufReader(new StringReader("3:fooi123e"));
-await bencode.read(reader) // => "foo"
-await bencode.read(reader) // => 123
+// Decode with Stream
+const src = await Deno.open("./test_input.txt");
+const stream = src.readable.pipeThrough(new bencode.Uint8ArrayToBencodeStream())
+for await (const v of stream) {
+  console.log(v);
+}
 ----
 
 == Encode
@@ -25,29 +27,10 @@ await bencode.read(reader) // => 123
 // Encode String
 bencode.encode({foo: [123, {bar: "baz"}]}) // => "d3:fooli123ed3:bar3:bazeee"
 
-// Encode with BufWriter
-const strWriter = new StringWriter();
-const writer = new BufWriter(strWriter);
-
-await bencode.write(writer, "foo");
-strWriter.toString() // => "3:foo"
-await bencode.write(writer, 123);
-strWriter.toString() // => "3:fooi123e"
-----
-
-== Stream
-
-[source,typescript]
-----
-const src = await Deno.open("./test_input.txt");
-const stream = src.readable.pipeThrough(new bencode.Uint8ArrayToBencodeStream())
-for await (const v of stream) {
-  console.log(v);
-}
 ----
 
 == License
 
-Copyright (c) 2021-2023 http://twitter.com/uochan[Masashi Iizuka]
+Copyright (c) 2021-2024 https://scrapbox.io/uochan/uochan[Masashi Iizuka]
 
 Distributed under the MIT License.
